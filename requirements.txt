@@ -1,2 +1,0 @@
-graphviz==0.21
-ipython==9.12.0
