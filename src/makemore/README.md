@@ -218,6 +218,12 @@ kaxlee, kharo, tere, tegh, ever, lole, sainah, raeristephyri, syn, eca
 | Test set (held-out, 22,816 samples) | **2.4036** |
 | Full dataset (per-name avg NLL) | **2.1925** |
 
+**Sample names** (seed `1777213731`):
+
+```
+kimi, fia, monie, javan, raiyah, kesley, lakextessie, seon, briel, sahia
+```
+
 ---
 
 ## Summary
