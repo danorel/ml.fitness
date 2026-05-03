@@ -162,12 +162,71 @@ kaxlee, kharo, tere, tegh, ever, lole, sainah, raeristephyri, syn, eca
 
 ---
 
+## 4. MLP + BatchNorm + Kaiming Init
+
+**Approach:** same MLP architecture, with two improvements: (1) batch normalization before `tanh` activation stabilizes hidden pre-activations; (2) Kaiming initialization (`(5/3) / sqrt(fan_in)`) on `W1` controls gradient flow through `tanh`. Bias `b1` removed — batch norm's `bn_bias` subsumes it.
+
+**Architecture:**
+
+| Component | Shape | Init | Detail |
+|-----------|-------|------|--------|
+| Embedding `C` | `(27, 10)` | `1/sqrt(27)` | character embeddings |
+| `W1` | `(30, 200)` | Kaiming `(5/3)/sqrt(30)` | pre-BN projection |
+| `bn_gain` | `(1, 200)` | ones | BN scale |
+| `bn_bias` | `(1, 200)` | zeros | BN shift (replaces `b1`) |
+| `W2` | `(200, 27)` | `1/sqrt(200×27)` | hidden → logits |
+| `b2` | `(27,)` | zeros | output bias |
+| **Total params** | **12,097** | | `+200` vs baseline (bn_gain, bn_bias replace b1) |
+
+**Hyperparameters:**
+
+| Hyperparameter | Value |
+|----------------|-------|
+| `SEQ_SIZE` (context) | 3 |
+| `VOC_SIZE` | 27 |
+| `EMB_SIZE` | 10 |
+| `HID_SIZE` | 200 |
+| `BCH_SIZE` (mini-batch) | 128 |
+| Loss | Cross-entropy |
+| Optimizer | SGD |
+| Learning rate schedule | Linear decay `1.0 → 0.0` over epochs |
+| Epochs | 5,000 |
+| Random seed | `1777213731` |
+| BN momentum | `1e-3` |
+| BN epsilon | `1e-6` |
+
+**Training curve (train loss, mini-batch):**
+
+| Epoch | Train Loss |
+|-------|-----------|
+| 1 | 3.2743 |
+| 500 | 2.3764 |
+| 1000 | 2.3867 |
+| 1500 | 2.1884 |
+| 2000 | 2.1499 |
+| 2500 | 2.1358 |
+| 3000 | 2.2544 |
+| 3500 | 2.1511 |
+| 4000 | 2.3286 |
+| 4500 | 2.2691 |
+| 5000 | 2.3091 |
+
+**Final evaluation:**
+
+| Split | Loss (NLL) |
+|-------|-----------|
+| Test set (held-out, 22,816 samples) | **2.4036** |
+| Full dataset (per-name avg NLL) | **2.1925** |
+
+---
+
 ## Summary
 
-| Model | NLL | Params | Notes |
-|-------|-----|--------|-------|
-| Bigram (count-based) | 2.4541 | 0 | analytical, no training |
-| Bigram FFN | 2.5868 | 756 | 5000 epochs, LR=0.1, still converging |
-| MLP (trigram context) | 2.4042 (full eval) / 2.5411 (test) | 11,897 | 5000 epochs, LR 1→0 |
+| Model | NLL (full eval) | NLL (test) | Params | Notes |
+|-------|-----------------|------------|--------|-------|
+| Bigram (count-based) | 2.4541 | — | 0 | analytical, no training |
+| Bigram FFN | 2.5868 | — | 756 | 5000 epochs, LR=0.1, still converging |
+| MLP (trigram context) | 2.4042 | 2.5411 | 11,897 | 5000 epochs, LR 1→0 |
+| MLP + BN + Kaiming | **2.1925** | 2.4036 | 12,097 | 5,000 epochs, LR 1→0, BN before tanh |
 
-MLP with trigram context beats the count-based bigram baseline on full-dataset NLL (2.4042 vs 2.4541), confirming that wider context improves character-level modeling. Test-set NLL (2.5411) reflects held-out generalization.
+BatchNorm + Kaiming init improves full-dataset NLL (2.1925 vs 2.4042) at same epoch budget, confirming proper initialization and activation normalization accelerate convergence. Test NLL (2.4036) nearly matches baseline MLP (2.5411) — better generalization too.
