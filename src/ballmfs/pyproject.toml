@@ -1,0 +1,17 @@
+[project]
+name = "ballmfs"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy==1.26.1",
+    "seaborn==0.13.2",
+    "tiktoken==0.14.0",
+    "torch==2.2.2",
+    "tqdm==4.67.3",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
+    "jupyterlab>=4.6.3",
+]
