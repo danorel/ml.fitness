@@ -5,6 +5,22 @@ Vocabulary: 27 tokens — `a–z` + `.` (separator/boundary token).
 
 ---
 
+## Setup
+
+Own `uv` environment (Python 3.12, pinned for `torch==2.2.2` wheel compatibility).
+
+```bash
+cd src/makemore
+uv sync                # creates .venv, installs deps from pyproject.toml
+uv run python -m ipykernel install --user --name makemore --display-name "makemore (uv)"
+```
+
+Open `notebooks/*.ipynb` and select kernel **makemore (uv)**.
+
+To add a dependency: `uv add <package>`.
+
+---
+
 ## 1. Bigram (count-based)
 
 **Approach:** raw co-occurrence counts → row-normalized probability table. No gradient descent.
